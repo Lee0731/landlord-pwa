@@ -148,13 +148,13 @@
 
   function deleteRoom(building, room) {
     var client = sb();
-    if (!client) return;
+    if (!client) return Promise.resolve();
     _log('☁ 删除 '+building+'-'+room);
-    client.from('rooms').delete().eq('building',building).eq('room',room)
+    return client.from('rooms').delete().eq('building',building).eq('room',room)
       .then(function(r) {
-        if(r.error) _log('❌ 删除: '+r.error.message,'err');
+        if(r.error) { _log('❌ 删除: '+r.error.message,'err'); throw r.error; }
         else _log('☁ 已从云端删除');
-      }).catch(function(e){ _log('❌ 删除异常: '+e.message,'err'); });
+      }).catch(function(e){ _log('❌ 删除异常: '+e.message,'err'); throw e; });
   }
 
   // ---- 数据转换 ----

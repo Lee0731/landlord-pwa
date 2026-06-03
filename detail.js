@@ -564,20 +564,24 @@ window.addEventListener('unhandledrejection', function(e) {
         delete data[rk()];
         save(data);
 
-        // 云端删除
-        if (typeof LandlordAuth !== 'undefined') {
-          LandlordAuth.deleteRoom(building, room);
-        }
-
-        DB.deleteRoomImages(building, room).then(function() {
-          _log('✅ 图片已删除');
-        }).catch(function(e) {
-          _log('⚠ 删图片: ' + e.message, 'warn');
-        });
+        DB.deleteRoomImages(building, room).catch(function() {});
         DB.deleteReminder(rk()).catch(function() {});
 
-        _log('✅ 已清空，跳转首页');
-        window.location.href = 'index.html';
+        // 等云端删完再跳转，防止主页又拉回来
+        var cloudDone;
+        if (typeof LandlordAuth !== 'undefined') {
+          cloudDone = LandlordAuth.deleteRoom(building, room);
+        } else {
+          cloudDone = Promise.resolve();
+        }
+
+        cloudDone.then(function() {
+          _log('✅ 已清空，跳转首页');
+          window.location.href = 'index.html';
+        }).catch(function() {
+          _log('⚠ 云端删除失败，仍跳转', 'warn');
+          window.location.href = 'index.html';
+        });
       } catch (e) {
         _log('❌ 清空失败: ' + e.message, 'err');
       }
