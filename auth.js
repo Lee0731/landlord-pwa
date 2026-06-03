@@ -87,12 +87,41 @@
       _log('☁ 拉到 '+rows.length+' 条');
 
       var local = loadLocal(), changed = false;
+
+      // 云端 → 本地
       rows.forEach(function(row) {
         var key = row.building+'-'+row.room;
         var cloudT = new Date(row.updated_at).getTime();
         var localT = (local[key]&&local[key]._cloudTime)||0;
         if (cloudT > localT) { local[key]=rowToData(row,local[key]); changed=true; }
       });
+
+      // 本地有但云端没有 → 补上传
+      var cloudSet = {};
+      rows.forEach(function(row) { cloudSet[row.building+'-'+row.room] = true; });
+
+      var needPush = [];
+      Object.keys(local).forEach(function(k) {
+        var d = local[k];
+        if (!d.building || !d.room) return;
+        if (!cloudSet[k] && d.rented) {
+          needPush.push(d);
+        }
+      });
+
+      if (needPush.length > 0) {
+        _log('☁ 发现 '+needPush.length+' 条本地数据未上传，补传中…');
+        var rows2 = needPush.map(function(d) {
+          var row = dataToRow(d);
+          row.building = d.building; row.room = d.room;
+          return row;
+        });
+        client.from('rooms').upsert(rows2, {onConflict:'building,room'}).then(function(r2) {
+          if (r2.error) { _log('❌ 补传: '+r2.error.message,'err'); }
+          else { _log('✅ 补传 '+needPush.length+' 条完成'); }
+        }).catch(function(e){ _log('❌ 补传异常: '+e.message,'err'); });
+      }
+
       if (changed) { saveLocal(local); _log('☁ 本地已更新'); }
       setSync('synced');
     }).catch(function(e) { _log('❌ 拉取异常: '+e.message,'err'); setSync('error'); });
