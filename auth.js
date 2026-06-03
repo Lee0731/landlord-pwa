@@ -88,18 +88,30 @@
 
       var local = loadLocal(), changed = false;
 
-      // 云端 → 本地
+      // 构建云端 key 集合
+      var cloudSet = {};
       rows.forEach(function(row) {
         var key = row.building+'-'+row.room;
+        cloudSet[key] = true;
+
+        // 云端 → 本地（云端更新才覆盖）
         var cloudT = new Date(row.updated_at).getTime();
         var localT = (local[key]&&local[key]._cloudTime)||0;
         if (cloudT > localT) { local[key]=rowToData(row,local[key]); changed=true; }
       });
 
-      // 本地有但云端没有 → 补上传
-      var cloudSet = {};
-      rows.forEach(function(row) { cloudSet[row.building+'-'+row.room] = true; });
+      // 云端已删除 → 本地也删（只删曾同步过的）
+      Object.keys(local).forEach(function(k) {
+        var d = local[k];
+        if (!d.building || !d.room) return;
+        if (d._cloudTime && !cloudSet[k]) {
+          _log('☁ 本地删除(云端已无): '+k);
+          delete local[k];
+          changed = true;
+        }
+      });
 
+      // 本地有但云端没有(从未同步过) → 补上传
       var needPush = [];
       Object.keys(local).forEach(function(k) {
         var d = local[k];
@@ -142,6 +154,7 @@
       var local = loadLocal();
       if (local[key]) local[key]._cloudTime = Date.now();
       saveLocal(local);
+      setSync('synced');
       setSync('synced');
     }).catch(function(e) { _log('❌ 上传异常: '+e.message,'err'); setSync('error'); });
   }
