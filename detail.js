@@ -293,9 +293,17 @@ window.addEventListener('unhandledrejection', function(e) {
   _log('✅ 结转按钮就绪');
 
   // ---- 身份证图片 ----
+  var btnDownFront = $('btnDownFront');
+  var btnReplFront = $('btnReplFront');
+  var btnDownBack  = $('btnDownBack');
+  var btnReplBack  = $('btnReplBack');
+
   function showImage(slot, img, data) {
     img.src = data;
     slot.classList.add('has-image');
+    // 启用下载按钮
+    if (slot === elIdFront && btnDownFront) btnDownFront.disabled = false;
+    if (slot === elIdBack  && btnDownBack)  btnDownBack.disabled = false;
   }
 
   function compressImage(file) {
@@ -378,6 +386,27 @@ window.addEventListener('unhandledrejection', function(e) {
   setupSlot(elIdFront, elIdFrontImg, 'front');
   setupSlot(elIdBack, elIdBackImg, 'back');
   _log('✅ 图片上传已初始化');
+
+  // ---- 下载 / 更换 按钮 ----
+  function downloadImg(imgEl, side) {
+    if (!imgEl || !imgEl.src) return;
+    var a = document.createElement('a');
+    a.href = imgEl.src;
+    a.download = building + room + '-身份证-' + (side === 'front' ? '正面' : '反面') + '.jpg';
+    a.click();
+    _log('📥 下载: ' + side);
+  }
+
+  function replaceImg(slot) {
+    var input = slot ? slot.querySelector('input[type=file]') : null;
+    if (input) input.click();
+  }
+
+  if (btnDownFront) btnDownFront.addEventListener('click', function() { downloadImg(elIdFrontImg, 'front'); });
+  if (btnReplFront) btnReplFront.addEventListener('click', function() { replaceImg(elIdFront); });
+  if (btnDownBack)  btnDownBack.addEventListener('click', function() { downloadImg(elIdBackImg, 'back'); });
+  if (btnReplBack)  btnReplBack.addEventListener('click', function() { replaceImg(elIdBack); });
+  _log('✅ 下载/更换按钮就绪');
 
   // ---- 图片全屏查看 ----
   var viewerSide = '';
