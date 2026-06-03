@@ -362,3 +362,28 @@ body {
   .card { padding: 20px; }
   .meter-grid { gap: 14px; }
 }
+
+/* ---- 调试日志 ---- */
+.debug-panel {
+  max-width: 680px; margin: 20px auto 0; padding: 0 16px;
+}
+.debug-header {
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  padding: 8px 14px; background: var(--card);
+  border-radius: 10px 10px 0 0;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+.debug-body {
+  background: #1d1d1f; color: #30d158;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 11px; line-height: 1.6;
+  padding: 10px 14px; border-radius: 0 0 10px 10px;
+  max-height: 200px; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: none;
+}
+.debug-panel.open .debug-body { display: block; }
+.debug-line { white-space: pre-wrap; word-break: break-all; }
+.debug-line.err { color: #ff453a; }
+.debug-line.warn { color: #ffd60a; }
