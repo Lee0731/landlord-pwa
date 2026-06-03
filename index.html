@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f5f5f7" />
+  <link rel="manifest" href="manifest.json" />
+  <title>房东管家</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <nav class="top-bar">
+    <div class="top-bar-inner">
+      <span class="logo">房东管家</span>
+      <span class="date" id="todayDate"></span>
+    </div>
+  </nav>
+
+  <!-- 统计概览 -->
+  <section class="stats-bar">
+    <div class="stat-card">
+      <span class="stat-num" id="totalRooms">0</span>
+      <span class="stat-label">总房间</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" id="rentedRooms">0</span>
+      <span class="stat-label">已出租</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" id="vacantRooms">0</span>
+      <span class="stat-label">空置</span>
+    </div>
+  </section>
+
+  <!-- 楼宇列表 -->
+  <main class="buildings">
+
+    <!-- 村前大道 -->
+    <section class="building-card">
+      <div class="building-header">
+        <h2 class="building-name">村前大道</h2>
+        <span class="building-count">12 间</span>
+      </div>
+      <div class="building-body">
+        <!-- 5F — 最高层在最上面 -->
+        <div class="floor-row">
+          <div class="floor-tag">5F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="501" data-building="村前大道">
+              <span class="room-num">501</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="502" data-building="村前大道">
+              <span class="room-num">502</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="503" data-building="村前大道">
+              <span class="room-num">503</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 4F -->
+        <div class="floor-row">
+          <div class="floor-tag">4F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="401" data-building="村前大道">
+              <span class="room-num">401</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="402" data-building="村前大道">
+              <span class="room-num">402</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="403" data-building="村前大道">
+              <span class="room-num">403</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 3F -->
+        <div class="floor-row">
+          <div class="floor-tag">3F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="301" data-building="村前大道">
+              <span class="room-num">301</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="302" data-building="村前大道">
+              <span class="room-num">302</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="303" data-building="村前大道">
+              <span class="room-num">303</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 2F — 最底层在最下面 -->
+        <div class="floor-row">
+          <div class="floor-tag">2F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="201" data-building="村前大道">
+              <span class="room-num">201</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="202" data-building="村前大道">
+              <span class="room-num">202</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="203" data-building="村前大道">
+              <span class="room-num">203</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 底座 -->
+        <div class="building-base"></div>
+      </div>
+    </section>
+
+    <!-- 华安里 -->
+    <section class="building-card">
+      <div class="building-header">
+        <h2 class="building-name">华安里</h2>
+        <span class="building-count">9 间</span>
+      </div>
+      <div class="building-body">
+        <!-- 5F -->
+        <div class="floor-row">
+          <div class="floor-tag">5F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="501" data-building="华安里">
+              <span class="room-num">501</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="502" data-building="华安里">
+              <span class="room-num">502</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 4F -->
+        <div class="floor-row">
+          <div class="floor-tag">4F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="401" data-building="华安里">
+              <span class="room-num">401</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="402" data-building="华安里">
+              <span class="room-num">402</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 3F -->
+        <div class="floor-row">
+          <div class="floor-tag">3F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="301" data-building="华安里">
+              <span class="room-num">301</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="302" data-building="华安里">
+              <span class="room-num">302</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 2F -->
+        <div class="floor-row">
+          <div class="floor-tag">2F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="201" data-building="华安里">
+              <span class="room-num">201</span>
+              <span class="room-dot"></span>
+            </div>
+            <div class="room" data-room="202" data-building="华安里">
+              <span class="room-num">202</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 1F — 最底层在最下面 -->
+        <div class="floor-row">
+          <div class="floor-tag">1F</div>
+          <div class="floor-rooms">
+            <div class="room" data-room="101" data-building="华安里">
+              <span class="room-num">101</span>
+              <span class="room-dot"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 底座 -->
+        <div class="building-base"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 房间详情弹窗 — 底部抽屉式 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <h3 id="modalRoomId" class="sheet-title">201</h3>
+          <span class="sheet-building" id="modalBuilding">村前大道</span>
+        </div>
+        <span class="modal-status-badge vacant" id="modalStatus">空置</span>
+      </div>
+      <div class="sheet-body">
+        <div class="field">
+          <label>租户姓名</label>
+          <input type="text" id="tenantName" placeholder="输入租户姓名" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>联系电话</label>
+          <input type="tel" id="tenantPhone" placeholder="输入联系电话" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>月租 (元)</label>
+            <input type="number" id="rentAmount" placeholder="金额" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label>起租日期</label>
+            <input type="date" id="rentStart" />
+          </div>
+        </div>
+        <div class="field">
+          <label>备注</label>
+          <textarea id="rentNote" rows="2" placeholder="备注信息…"></textarea>
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="btn btn-delete" id="btnDelete">清空</button>
+        <button class="btn btn-save" id="btnSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

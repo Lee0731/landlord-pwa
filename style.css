@@ -1,0 +1,328 @@
+/* ============================================
+   房东管家 — Mobile-first Apple Minimalist
+   ============================================ */
+
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --text: #1d1d1f;
+  --text2: #86868b;
+  --accent: #0071e3;
+  --accent-h: #0077ed;
+  --green: #34c759;
+  --green-bg: #e8f9ed;
+  --red: #ff3b30;
+  --red-bg: #fff0ee;
+  --border: rgba(0,0,0,0.06);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "PingFang SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  padding-bottom: calc(var(--safe-bottom) + 20px);
+}
+
+/* ---- 顶栏 ---- */
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(245,245,247,0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--border);
+}
+.top-bar-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.logo { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.date  { font-size: 13px; color: var(--text2); font-weight: 500; }
+
+/* ---- 统计 ---- */
+.stats-bar {
+  max-width: 680px; margin: 16px auto 0; padding: 0 20px;
+  display: flex; gap: 10px;
+}
+.stat-card {
+  flex: 1; text-align: center;
+  background: var(--card); border-radius: 14px;
+  padding: 14px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.stat-num {
+  display: block; font-size: 26px; font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.stat-card:nth-child(2) .stat-num { color: var(--green); }
+.stat-card:nth-child(3) .stat-num { color: var(--accent); }
+.stat-label {
+  display: block; margin-top: 2px;
+  font-size: 11px; color: var(--text2); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* ---- 楼宇卡片 ---- */
+.buildings {
+  max-width: 680px; margin: 20px auto 0; padding: 0 20px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.building-card {
+  background: var(--card);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.building-header {
+  padding: 16px 18px 0;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.building-name { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.building-count {
+  font-size: 13px; color: var(--text2); font-weight: 500;
+}
+
+.building-body {
+  padding: 14px 18px 16px;
+  position: relative;
+}
+
+/* ---- 楼层行 ---- */
+.floor-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0;
+  position: relative;
+}
+
+/* 左侧楼层标签 + 竖线 */
+.floor-tag {
+  width: 32px; flex-shrink: 0;
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  text-align: center;
+  position: relative;
+}
+
+/* 竖线穿过楼层 */
+.floor-row::before {
+  content: '';
+  position: absolute;
+  left: calc(18px + 16px); /* padding + half tag */
+  top: 0; bottom: 0; width: 2px;
+  background: #e5e5ea;
+  border-radius: 1px;
+}
+.floor-row:first-child::before { top: 50%; }
+.floor-row:last-of-type::before { bottom: 50%; }
+
+/* 竖线上的节点圆点 */
+.floor-tag::after {
+  content: '';
+  position: absolute;
+  right: -14px; top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px;
+  background: var(--card);
+  border: 2px solid #d1d1d6;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* ---- 房间 ---- */
+.floor-rooms {
+  display: flex; gap: 10px; flex: 1;
+  padding-left: 8px;
+}
+
+.room {
+  flex: 1; min-width: 0;
+  aspect-ratio: 1.35;
+  max-width: 100px;
+  background: var(--bg);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 5px;
+  transition: transform 0.2s cubic-bezier(.25,.46,.45,.94),
+              box-shadow 0.2s ease,
+              background 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  position: relative;
+  border: 1.5px solid transparent;
+}
+.room:active {
+  transform: scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* 房号 */
+.room-num {
+  font-size: 16px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* 状态小圆点 */
+.room-dot {
+  display: block; width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #d1d1d6;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 已出租状态 */
+.room.rented {
+  background: var(--green-bg);
+  border-color: rgba(52,199,89,0.25);
+}
+.room.rented .room-dot {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(52,199,89,0.15);
+}
+
+/* 底座 */
+.building-base {
+  margin: 4px 0 0 32px;
+  height: 6px;
+  background: linear-gradient(90deg, #d1d1d6, #e5e5ea);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ============================================
+   底部抽屉弹窗 — iOS Sheet 风格
+   ============================================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-sheet {
+  width: 100%; max-width: 500px;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(.32,.72,.24,1);
+  padding-bottom: var(--safe-bottom);
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+}
+.modal-overlay.active .modal-sheet {
+  transform: translateY(0);
+}
+
+/* 把手 */
+.sheet-handle {
+  width: 36px; height: 5px;
+  background: #c7c7cc; border-radius: 3px;
+  margin: 8px auto 4px;
+  flex-shrink: 0;
+}
+
+.sheet-header {
+  padding: 12px 20px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.sheet-title {
+  font-size: 24px; font-weight: 700; letter-spacing: -0.03em;
+}
+.sheet-building {
+  font-size: 13px; color: var(--text2); font-weight: 500;
+  display: block; margin-top: 1px;
+}
+.modal-status-badge {
+  font-size: 13px; font-weight: 600;
+  padding: 5px 14px; border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+.modal-status-badge.vacant { background: #e5e5ea; color: #86868b; }
+.modal-status-badge.rented { background: var(--green-bg); color: #248a3d; }
+
+.sheet-body {
+  padding: 16px 20px;
+  overflow-y: auto; flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text2); margin-bottom: 5px;
+}
+.field input,
+.field textarea {
+  width: 100%; padding: 10px 14px;
+  border: 1px solid #d2d2d7; border-radius: 12px;
+  font-size: 16px; font-family: inherit;
+  background: var(--bg); color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.1);
+}
+.field textarea { resize: none; }
+
+.field-row {
+  display: flex; gap: 12px;
+}
+.field-row .field { flex: 1; }
+
+.sheet-footer {
+  padding: 12px 20px 18px;
+  display: flex; gap: 10px;
+  border-top: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.btn {
+  flex: 1; padding: 14px 0; border: none; border-radius: 14px;
+  font-size: 16px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.7; }
+.btn-save  { background: var(--accent); color: #fff; }
+.btn-delete { background: var(--bg); color: var(--red); }
+
+/* ---- 入场动画 ---- */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.building-card { animation: slideUp 0.45s cubic-bezier(.25,.46,.45,.94) both; }
+.building-card:nth-child(2) { animation-delay: 0.1s; }
+
+/* ---- 宽屏适配 ---- */
+@media (min-width: 640px) {
+  .buildings {
+    flex-direction: row;
+    gap: 16px;
+  }
+  .building-card { flex: 1; }
+  .room {
+    aspect-ratio: 1.2;
+  }
+}
+
+/* ---- 小屏微调 ---- */
+@media (max-width: 360px) {
+  .room-num { font-size: 14px; }
+  .floor-rooms { gap: 8px; }
+  .floor-row { gap: 10px; }
+}

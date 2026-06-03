@@ -1,0 +1,21 @@
+{
+  "name": "房东管理系统",
+  "short_name": "房东管家",
+  "description": "房东出租房管理系统",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#1d1d1f",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
