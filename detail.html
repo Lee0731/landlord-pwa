@@ -57,34 +57,34 @@
     <!-- 身份证照片 -->
     <section class="card">
       <div class="card-header">身份证照片</div>
-      <!-- 正面 -->
-      <div class="id-col">
-        <div class="id-slot" id="idFront" data-side="front">
-          <input type="file" accept="image/*" hidden />
-          <div class="id-placeholder">
-            <svg class="id-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="11" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M15 9h3M15 12h3M15 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>点击拍摄人像面</span>
+      <div class="id-cards">
+        <div class="id-col">
+          <div class="id-slot" id="idFront" data-side="front">
+            <input type="file" accept="image/*" hidden />
+            <div class="id-placeholder">
+              <svg class="id-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="11" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M15 9h3M15 12h3M15 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>人像面</span>
+            </div>
+            <img class="id-preview" id="idFrontImg" alt="身份证正面" />
           </div>
-          <img class="id-preview" id="idFrontImg" alt="身份证正面" />
-        </div>
-        <div class="id-actions">
-          <button class="id-btn" id="btnDownFront" disabled>下载</button>
-          <button class="id-btn" id="btnReplFront">更换</button>
-        </div>
-      </div>
-      <!-- 反面 -->
-      <div class="id-col" style="margin-top:10px;">
-        <div class="id-slot" id="idBack" data-side="back">
-          <input type="file" accept="image/*" hidden />
-          <div class="id-placeholder">
-            <svg class="id-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 10h10M7 13h10M7 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>点击拍摄国徽面</span>
+          <div class="id-actions">
+            <button class="id-btn" id="btnDownFront" disabled>下载</button>
+            <button class="id-btn" id="btnReplFront">更换</button>
           </div>
-          <img class="id-preview" id="idBackImg" alt="身份证反面" />
         </div>
-        <div class="id-actions">
-          <button class="id-btn" id="btnDownBack" disabled>下载</button>
-          <button class="id-btn" id="btnReplBack">更换</button>
+        <div class="id-col">
+          <div class="id-slot" id="idBack" data-side="back">
+            <input type="file" accept="image/*" hidden />
+            <div class="id-placeholder">
+              <svg class="id-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 10h10M7 13h10M7 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>国徽面</span>
+            </div>
+            <img class="id-preview" id="idBackImg" alt="身份证反面" />
+          </div>
+          <div class="id-actions">
+            <button class="id-btn" id="btnDownBack" disabled>下载</button>
+            <button class="id-btn" id="btnReplBack">更换</button>
+          </div>
         </div>
       </div>
     </section>
@@ -143,6 +143,36 @@
       <button class="btn-roll" id="btnRollElec">⏎ 结转下月</button>
     </section>
 
+    <!-- 网费 -->
+    <section class="card">
+      <div class="card-header">
+        <span>网费</span>
+        <span class="card-unit">固定月费</span>
+      </div>
+      <div class="field">
+        <label>月网费 (元)</label>
+        <input type="number" id="netFee" placeholder="如 100" inputmode="decimal" />
+      </div>
+    </section>
+
+    <!-- 其他费用 -->
+    <section class="card">
+      <div class="card-header">
+        <span>其他费用</span>
+        <span class="card-unit">固定月费</span>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>月费用 (元)</label>
+          <input type="number" id="otherFee" placeholder="如 50" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label>费用备注</label>
+          <input type="text" id="otherFeeNote" placeholder="如：物业费" autocomplete="off" />
+        </div>
+      </div>
+    </section>
+
     <!-- 押金 -->
     <section class="card">
       <div class="card-header">押金记录</div>
@@ -192,10 +222,32 @@
           <span>电费</span>
           <span id="sumElec">¥ 0.00</span>
         </div>
+        <div class="summary-line">
+          <span>网费</span>
+          <span id="sumNet">¥ 0.00</span>
+        </div>
+        <div class="summary-line">
+          <span>其他费用</span>
+          <span id="sumOther">¥ 0.00</span>
+        </div>
         <div class="summary-divider"></div>
         <div class="summary-line summary-total">
           <span>合计</span>
           <span id="sumTotal">¥ 0.00</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-line summary-paid-row">
+          <span>实收金额</span>
+          <input type="number" id="actualPaid" placeholder="0" inputmode="decimal" />
+        </div>
+        <div class="summary-line">
+          <span>本月欠款</span>
+          <span class="arrears" id="sumMonthArrears">¥ 0.00</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-line summary-arrears-total">
+          <span>累计欠款</span>
+          <span class="arrears" id="sumTotalArrears">¥ 0.00</span>
         </div>
       </div>
       <div class="summary-actions">

@@ -122,6 +122,10 @@ window.addEventListener('unhandledrejection', function(e) {
   var elElecCurr   = $('elecCurr');
   var elElecRes    = $('elecResult');
 
+  var elNetFee     = $('netFee');
+  var elOtherFee   = $('otherFee');
+  var elOtherNote  = $('otherFeeNote');
+
   var elDepAmt     = $('depositAmount');
   var elDepDate    = $('depositDate');
   var elDepNote    = $('depositNote');
@@ -131,7 +135,12 @@ window.addEventListener('unhandledrejection', function(e) {
   var elSumRent    = $('sumRent');
   var elSumWater   = $('sumWater');
   var elSumElec    = $('sumElec');
+  var elSumNet     = $('sumNet');
+  var elSumOther   = $('sumOther');
   var elSumTotal   = $('sumTotal');
+  var elActualPaid = $('actualPaid');
+  var elMonthArrears = $('sumMonthArrears');
+  var elTotalArrears = $('sumTotalArrears');
 
   var elBtnPaid    = $('btnPaid');
   var elBtnShare   = $('btnShare');
@@ -184,11 +193,18 @@ window.addEventListener('unhandledrejection', function(e) {
   if (elElecPrev) elElecPrev.value = info.elecPrevReading || '';
   if (elElecCurr) elElecCurr.value = info.elecCurrReading || '';
 
+  if (elNetFee) elNetFee.value = info.netFee || '';
+  if (elOtherFee) elOtherFee.value = info.otherFee || '';
+  if (elOtherNote) elOtherNote.value = info.otherFeeNote || '';
+
   if (elDepAmt) elDepAmt.value = info.depositAmount || '';
   if (elDepDate) elDepDate.value = info.depositDate || '';
   if (elDepNote) elDepNote.value = info.depositNote || '';
 
   if (elRemindDay) elRemindDay.value = info.rentRemindDay || 0;
+
+  if (elActualPaid) elActualPaid.value = info.actualPaid || '';
+  // totalArrears 不需要输入框，由计算得出
 
   _log('✅ 表单数据已填充');
 
@@ -244,23 +260,62 @@ window.addEventListener('unhandledrejection', function(e) {
     var rent = parseFloat(elRent ? elRent.value : 0) || 0;
     var wc = calcMeter(elWaterPrice, elWaterPrev, elWaterCurr, elWaterRes, '吨');
     var ec = calcMeter(elElecPrice, elElecPrev, elElecCurr, elElecRes, '度');
-    var total = rent + wc + ec;
+    var net = parseFloat(elNetFee ? elNetFee.value : 0) || 0;
+    var other = parseFloat(elOtherFee ? elOtherFee.value : 0) || 0;
+    var total = rent + wc + ec + net + other;
 
     if (elSumRent)  elSumRent.textContent  = '¥ ' + rent.toFixed(2);
     if (elSumWater) elSumWater.textContent = '¥ ' + wc.toFixed(2);
     if (elSumElec)  elSumElec.textContent  = '¥ ' + ec.toFixed(2);
+    if (elSumNet)   elSumNet.textContent   = '¥ ' + net.toFixed(2);
+    if (elSumOther) elSumOther.textContent = '¥ ' + other.toFixed(2);
     if (elSumTotal) elSumTotal.textContent = '¥ ' + total.toFixed(2);
+
+    // 欠款计算
+    var paid = parseFloat(elActualPaid ? elActualPaid.value : 0) || 0;
+    var monthArrears = Math.max(0, total - paid);
+    // 从最新数据读累计欠款
+    var latestData = load();
+    var latestInfo = latestData[rk()] || {};
+    var prevArrears = parseFloat(latestInfo.totalArrears) || 0;
+    var finalArrears = prevArrears + monthArrears;
+
+    if (elMonthArrears) elMonthArrears.textContent = '¥ ' + monthArrears.toFixed(2);
+    if (elTotalArrears) elTotalArrears.textContent = '¥ ' + finalArrears.toFixed(2);
   }
 
-  // 监听水电变化
+  // 计算新的累计欠款（保存时用）
+  function calcTotalArrears() {
+    var rent = parseFloat(elRent ? elRent.value : 0) || 0;
+    var wc = 0, ec = 0;
+    if (elWaterPrice && elWaterPrev && elWaterCurr && elWaterRes) {
+      var p = parseFloat(elWaterPrice.value)||0, pv = parseFloat(elWaterPrev.value)||0, c = parseFloat(elWaterCurr.value)||0;
+      if(c>0&&p>0) wc = Math.max(0,c-pv)*p;
+    }
+    if (elElecPrice && elElecPrev && elElecCurr && elElecRes) {
+      var p2 = parseFloat(elElecPrice.value)||0, pv2 = parseFloat(elElecPrev.value)||0, c2 = parseFloat(elElecCurr.value)||0;
+      if(c2>0&&p2>0) ec = Math.max(0,c2-pv2)*p2;
+    }
+    var net = parseFloat(elNetFee ? elNetFee.value : 0) || 0;
+    var other = parseFloat(elOtherFee ? elOtherFee.value : 0) || 0;
+    var total = rent + wc + ec + net + other;
+    var paid = parseFloat(elActualPaid ? elActualPaid.value : 0) || 0;
+    var monthArrears = Math.max(0, total - paid);
+    var latestData = load();
+    var latestInfo = latestData[rk()] || {};
+    var prevArrears = parseFloat(latestInfo.totalArrears) || 0;
+    return (prevArrears + monthArrears).toFixed(2);
+  }
+
+  // 监听变化 → 更新汇总
   [elWaterPrice, elWaterPrev, elWaterCurr,
    elElecPrice, elElecPrev, elElecCurr,
-   elRent].forEach(function(el) {
+   elRent, elNetFee, elOtherFee, elActualPaid].forEach(function(el) {
     if (el) el.addEventListener('input', updateSummary);
   });
 
   updateSummary();
-  _log('✅ 水电计算就绪');
+  _log('✅ 费用计算就绪');
 
   // ---- 结转下月 ----
   function setupRoll(btnId, prevEl, currEl, label) {
@@ -473,14 +528,23 @@ window.addEventListener('unhandledrejection', function(e) {
       var eCurr = parseFloat(elElecCurr ? elElecCurr.value : 0) || 0;
       var eUse = Math.max(0, eCurr - ePrev);
       var eCost = eUse * ep;
-      var total = rent + wCost + eCost;
+      var net = parseFloat(elNetFee ? elNetFee.value : 0) || 0;
+      var other = parseFloat(elOtherFee ? elOtherFee.value : 0) || 0;
+      var otherN = elOtherNote ? elOtherNote.value.trim() : '';
+      var paid = parseFloat(elActualPaid ? elActualPaid.value : 0) || 0;
+      var total = rent + wCost + eCost + net + other;
+      var monthArrears = Math.max(0, total - paid);
 
       var text =
         '【' + building + ' ' + room + '】月度账单\n' +
         '房租：¥' + rent.toFixed(2) + '\n' +
         '水费：¥' + wCost.toFixed(2) + ' (' + wUse + '吨)\n' +
         '电费：¥' + eCost.toFixed(2) + ' (' + eUse + '度)\n' +
-        '合计：¥' + total.toFixed(2);
+        '网费：¥' + net.toFixed(2) + '\n' +
+        '其他：¥' + other.toFixed(2) + (otherN ? '(' + otherN + ')' : '') + '\n' +
+        '合计：¥' + total.toFixed(2) + '\n' +
+        '实收：¥' + paid.toFixed(2) + '\n' +
+        (monthArrears > 0 ? '⚠ 本月欠款：¥' + monthArrears.toFixed(2) : '✅ 已付清');
 
       _log('📤 分享账单: 合计 ¥' + total.toFixed(2));
 
@@ -524,11 +588,16 @@ window.addEventListener('unhandledrejection', function(e) {
           elecPrice: elElecPrice ? elElecPrice.value.trim() : '',
           elecPrevReading: elElecPrev ? elElecPrev.value.trim() : '',
           elecCurrReading: elElecCurr ? elElecCurr.value.trim() : '',
+          netFee: elNetFee ? elNetFee.value.trim() : '',
+          otherFee: elOtherFee ? elOtherFee.value.trim() : '',
+          otherFeeNote: elOtherNote ? elOtherNote.value.trim() : '',
           rentRemindDay: day,
           rentRemindEnabled: day > 0,
           depositAmount: elDepAmt ? elDepAmt.value.trim() : '',
           depositDate: elDepDate ? elDepDate.value : '',
           depositNote: elDepNote ? elDepNote.value.trim() : '',
+          actualPaid: elActualPaid ? elActualPaid.value.trim() : '',
+          totalArrears: calcTotalArrears(),
           lastPaidMonth: lastPaid,
         };
         save(data);

@@ -230,9 +230,12 @@
       water_curr: d.waterCurrReading||'',
       elec_price: d.elecPrice||'', elec_prev: d.elecPrevReading||'',
       elec_curr: d.elecCurrReading||'',
+      net_fee: d.netFee||'',
+      other_fee: d.otherFee||'', other_fee_note: d.otherFeeNote||'',
       deposit_amount: d.depositAmount||'', deposit_date: d.depositDate||'',
       deposit_note: d.depositNote||'',
       remind_day: d.rentRemindDay||0, remind_enabled: d.rentRemindEnabled||false,
+      actual_paid: d.actualPaid||'', total_arrears: d.totalArrears||'0',
       last_paid_month: d.lastPaidMonth||'',
     };
   }
@@ -247,9 +250,13 @@
     d.waterCurrReading=row.water_curr||'';
     d.elecPrice=row.elec_price||''; d.elecPrevReading=row.elec_prev||'';
     d.elecCurrReading=row.elec_curr||'';
+    d.netFee=row.net_fee||'';
+    d.otherFee=row.other_fee||''; d.otherFeeNote=row.other_fee_note||'';
     d.depositAmount=row.deposit_amount||''; d.depositDate=row.deposit_date||'';
     d.depositNote=row.deposit_note||'';
     d.rentRemindDay=row.remind_day||0; d.rentRemindEnabled=row.remind_enabled||false;
+    d.actualPaid=row.actual_paid||'';
+    d.totalArrears=row.total_arrears||'0';
     d.lastPaidMonth=row.last_paid_month||'';
     d._cloudTime=new Date(row.updated_at).getTime();
     return d;
