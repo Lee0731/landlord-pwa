@@ -76,6 +76,22 @@
   function loadLocal() { try{return JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){return {};} }
   function saveLocal(d) { localStorage.setItem(SKEY, JSON.stringify(d)); }
 
+  // 从 IndexedDB 读图片
+  function readLocalImages(key) {
+    var frontP = window.LandlordDB ? LandlordDB.getImage(key+'-front') : Promise.resolve(null);
+    var backP  = window.LandlordDB ? LandlordDB.getImage(key+'-back')  : Promise.resolve(null);
+    return Promise.all([frontP, backP]);
+  }
+
+  // 写图片到 IndexedDB
+  function writeLocalImages(key, front, back) {
+    var DB = window.LandlordDB;
+    if (!DB) return Promise.resolve();
+    var p1 = front ? DB.saveImage(key+'-front', front) : Promise.resolve();
+    var p2 = back  ? DB.saveImage(key+'-back', back)   : Promise.resolve();
+    return Promise.all([p1, p2]);
+  }
+
   function pullFromCloud() {
     var client = sb();
     if (!client) return;
@@ -90,17 +106,25 @@
 
       // 构建云端 key 集合
       var cloudSet = {};
+      var imageSyncQueue = []; // 需要同步图片的房间
+
       rows.forEach(function(row) {
         var key = row.building+'-'+row.room;
         cloudSet[key] = true;
 
-        // 云端 → 本地（云端更新才覆盖）
         var cloudT = new Date(row.updated_at).getTime();
         var localT = (local[key]&&local[key]._cloudTime)||0;
-        if (cloudT > localT) { local[key]=rowToData(row,local[key]); changed=true; }
+        if (cloudT > localT) {
+          local[key] = rowToData(row, local[key]);
+          changed = true;
+          // 检查是否有云端图片需要下载
+          if (row.id_front || row.id_back) {
+            imageSyncQueue.push({ key: key, front: row.id_front, back: row.id_back });
+          }
+        }
       });
 
-      // 云端已删除 → 本地也删（只删曾同步过的）
+      // 云端已删除 → 本地也删
       Object.keys(local).forEach(function(k) {
         var d = local[k];
         if (!d.building || !d.room) return;
@@ -123,18 +147,37 @@
 
       if (needPush.length > 0) {
         _log('☁ 发现 '+needPush.length+' 条本地数据未上传，补传中…');
-        var rows2 = needPush.map(function(d) {
-          var row = dataToRow(d);
-          row.building = d.building; row.room = d.room;
-          return row;
-        });
-        client.from('rooms').upsert(rows2, {onConflict:'building,room'}).then(function(r2) {
-          if (r2.error) { _log('❌ 补传: '+r2.error.message,'err'); }
-          else { _log('✅ 补传 '+needPush.length+' 条完成'); }
-        }).catch(function(e){ _log('❌ 补传异常: '+e.message,'err'); });
+        // 补传包含图片
+        needPush.reduce(function(chain, d) {
+          return chain.then(function() {
+            var k = d.building+'-'+d.room;
+            return readLocalImages(k).then(function(imgs) {
+              var row = dataToRow(d);
+              row.building = d.building; row.room = d.room;
+              row.id_front = imgs[0] || '';
+              row.id_back  = imgs[1] || '';
+              return client.from('rooms').upsert(row, {onConflict:'building,room'});
+            });
+          });
+        }, Promise.resolve()).then(function() {
+          _log('✅ 补传完成');
+        }).catch(function(e) { _log('❌ 补传异常: '+e.message,'err'); });
       }
 
       if (changed) { saveLocal(local); _log('☁ 本地已更新'); }
+
+      // 同步图片：云端图片 → IndexedDB
+      if (imageSyncQueue.length > 0) {
+        _log('☁ 同步 '+imageSyncQueue.length+' 间房图片…');
+        imageSyncQueue.forEach(function(item) {
+          writeLocalImages(item.key, item.front, item.back).then(function() {
+            _log('☁ 图片已缓存: '+item.key);
+          }).catch(function(e) {
+            _log('⚠ 图片缓存失败: '+item.key+' '+e.message, 'warn');
+          });
+        });
+      }
+
       setSync('synced');
     }).catch(function(e) { _log('❌ 拉取异常: '+e.message,'err'); setSync('error'); });
   }
@@ -148,13 +191,20 @@
     var row = dataToRow(roomData);
     row.building = building; row.room = room;
 
-    client.from('rooms').upsert(row, {onConflict:'building,room'}).then(function(r) {
+    // 读本地图片一起上传
+    readLocalImages(key).then(function(imgs) {
+      row.id_front = imgs[0] || '';
+      row.id_back  = imgs[1] || '';
+
+      _log('☁ 图片: 正面'+(imgs[0]?'有':'无')+' 反面'+(imgs[1]?'有':'无'));
+
+      return client.from('rooms').upsert(row, {onConflict:'building,room'});
+    }).then(function(r) {
       if (r.error) { _log('❌ 上传: '+r.error.message,'err'); setSync('error'); return; }
       _log('☁ '+key+' 已同步');
       var local = loadLocal();
       if (local[key]) local[key]._cloudTime = Date.now();
       saveLocal(local);
-      setSync('synced');
       setSync('synced');
     }).catch(function(e) { _log('❌ 上传异常: '+e.message,'err'); setSync('error'); });
   }
@@ -215,17 +265,22 @@
     _log('🔄 迁移本地数据到云端 ('+keys.length+' 条)…');
     setSync('syncing');
 
-    var rows = keys.map(function(k) {
-      var d = local[k], row = dataToRow(d);
-      row.building=d.building; row.room=d.room;
-      return row;
-    });
-
     var client = sb();
     if (!client) return;
 
-    client.from('rooms').upsert(rows, {onConflict:'building,room'}).then(function(r) {
-      if(r.error){ _log('❌ 迁移: '+r.error.message,'err'); setSync('error'); return; }
+    // 逐条迁移（含图片）
+    keys.reduce(function(chain, k) {
+      return chain.then(function() {
+        var d = local[k];
+        return readLocalImages(k).then(function(imgs) {
+          var row = dataToRow(d);
+          row.building = d.building; row.room = d.room;
+          row.id_front = imgs[0] || '';
+          row.id_back  = imgs[1] || '';
+          return client.from('rooms').upsert(row, {onConflict:'building,room'});
+        });
+      });
+    }, Promise.resolve()).then(function() {
       _log('✅ 迁移完成，上传 '+keys.length+' 条');
       localStorage.setItem('cloud_migrated','true');
       setSync('synced');
