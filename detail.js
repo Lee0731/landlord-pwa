@@ -262,6 +262,36 @@ window.addEventListener('unhandledrejection', function(e) {
   updateSummary();
   _log('✅ 水电计算就绪');
 
+  // ---- 结转下月 ----
+  function setupRoll(btnId, prevEl, currEl, label) {
+    var btn = $(btnId);
+    if (!btn || !prevEl || !currEl) return;
+
+    btn.addEventListener('click', function () {
+      var currVal = currEl.value;
+      if (!currVal || parseFloat(currVal) <= 0) {
+        _log('⚠ 结转' + label + ': 本月读数为空', 'warn');
+        return;
+      }
+      // 本月 → 上月，本月清空
+      prevEl.value = currVal;
+      currEl.value = '';
+      updateSummary();
+      // 按钮反馈
+      btn.classList.add('done');
+      btn.textContent = '✓ 已结转';
+      _log('✅ ' + label + '结转: 本月读数 ' + currVal + ' → 上月');
+      setTimeout(function () {
+        btn.classList.remove('done');
+        btn.textContent = '⏎ 结转下月';
+      }, 1500);
+    });
+  }
+
+  setupRoll('btnRollWater', elWaterPrev, elWaterCurr, '水费');
+  setupRoll('btnRollElec', elElecPrev, elElecCurr, '电费');
+  _log('✅ 结转按钮就绪');
+
   // ---- 身份证图片 ----
   function showImage(slot, img, data) {
     img.src = data;

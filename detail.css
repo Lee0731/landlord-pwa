@@ -185,6 +185,23 @@ body {
 }
 .id-slot.has-image .id-preview { opacity: 1; }
 
+/* ---- 结转按钮 ---- */
+.btn-roll {
+  width: 100%; margin-top: 10px; padding: 9px 0;
+  background: none; border: 1.5px dashed #c7c7cc; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: var(--text2);
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-roll:active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.btn-roll.done {
+  border-style: solid; border-color: var(--green);
+  color: var(--green); background: var(--green-bg);
+}
+
 /* ---- 水电表 ---- */
 .meter-grid {
   display: flex; gap: 10px;
