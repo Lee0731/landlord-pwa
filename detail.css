@@ -417,6 +417,50 @@ body {
   background: var(--accent); color: #fff;
 }
 
+/* ---- 欠款红色横幅 ---- */
+.arrears-banner {
+  display: flex; flex-direction: column; gap: 0;
+}
+
+.arrears-item {
+  background: linear-gradient(135deg, #ff3b30 0%, #ff6259 100%);
+  color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  font-size: 14px; font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  animation: arrearsIn 0.3s cubic-bezier(.25,.46,.45,.94) both;
+}
+.arrears-item:first-child { border-radius: 0 0 0 0; }
+
+@keyframes arrearsIn {
+  from { opacity: 0; max-height: 0; padding: 0 20px; }
+  to   { opacity: 1; max-height: 60px; padding: 12px 20px; }
+}
+
+.arrears-info {
+  display: flex; align-items: center; gap: 10px;
+}
+.arrears-month {
+  font-size: 12px; opacity: 0.85; font-weight: 500;
+}
+.arrears-amount {
+  font-size: 17px; font-weight: 700;
+}
+
+.arrears-settle {
+  background: rgba(255,255,255,0.22);
+  border: none; color: #fff;
+  padding: 5px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.arrears-settle:active {
+  background: rgba(255,255,255,0.4);
+}
+
 /* ---- 响应式 ---- */
 @media (min-width: 640px) {
   .detail-content { padding: 20px 24px 40px; }

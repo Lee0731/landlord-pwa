@@ -141,6 +141,7 @@ window.addEventListener('unhandledrejection', function(e) {
   var elActualPaid = $('actualPaid');
   var elMonthArrears = $('sumMonthArrears');
   var elTotalArrears = $('sumTotalArrears');
+  var elArrearsBanner = $('arrearsBanner');
 
   var elBtnPaid    = $('btnPaid');
   var elBtnShare   = $('btnShare');
@@ -205,6 +206,8 @@ window.addEventListener('unhandledrejection', function(e) {
 
   if (elActualPaid) elActualPaid.value = info.actualPaid || '';
   // totalArrears 不需要输入框，由计算得出
+  // 加载后渲染欠款横幅
+  renderArrearsBanner();
 
   _log('✅ 表单数据已填充');
 
@@ -271,17 +274,76 @@ window.addEventListener('unhandledrejection', function(e) {
     if (elSumOther) elSumOther.textContent = '¥ ' + other.toFixed(2);
     if (elSumTotal) elSumTotal.textContent = '¥ ' + total.toFixed(2);
 
-    // 欠款计算
+    // 本月欠款
     var paid = parseFloat(elActualPaid ? elActualPaid.value : 0) || 0;
     var monthArrears = Math.max(0, total - paid);
-    // 从最新数据读累计欠款
-    var latestData = load();
-    var latestInfo = latestData[rk()] || {};
-    var prevArrears = parseFloat(latestInfo.totalArrears) || 0;
-    var finalArrears = prevArrears + monthArrears;
-
     if (elMonthArrears) elMonthArrears.textContent = '¥ ' + monthArrears.toFixed(2);
+
+    // 历史欠款总计
+    var list = getArrearsList();
+    var totalArrears = list.reduce(function(s, a) { return s + (parseFloat(a.amount) || 0); }, 0);
+    var finalArrears = totalArrears + monthArrears;
     if (elTotalArrears) elTotalArrears.textContent = '¥ ' + finalArrears.toFixed(2);
+
+    // 渲染红色横幅
+    renderArrearsBanner();
+  }
+
+  // ---- 欠款历史列表 ----
+  function getArrearsList() {
+    try {
+      var d = load();
+      var info = d[rk()] || {};
+      return info.arrearsList ? JSON.parse(info.arrearsList) : [];
+    } catch(e) { return []; }
+  }
+
+  function saveArrearsList(list) {
+    var d = load();
+    if (!d[rk()]) d[rk()] = {};
+    d[rk()].arrearsList = JSON.stringify(list);
+    save(d);
+  }
+
+  function renderArrearsBanner() {
+    if (!elArrearsBanner) return;
+    var list = getArrearsList();
+    if (list.length === 0) {
+      elArrearsBanner.innerHTML = '';
+      return;
+    }
+    var html = '';
+    list.forEach(function(item, idx) {
+      var monthStr = item.month || '';
+      var monthDisplay = monthStr.replace('-', '年') + '月';
+      html += '<div class="arrears-item" data-idx="' + idx + '">' +
+        '<div class="arrears-info">' +
+          '<span class="arrears-month">' + monthDisplay + '</span>' +
+          '<span class="arrears-amount">欠 ¥' + parseFloat(item.amount).toFixed(2) + '</span>' +
+        '</div>' +
+        '<button class="arrears-settle" data-idx="' + idx + '">已结清</button>' +
+      '</div>';
+    });
+    elArrearsBanner.innerHTML = html;
+
+    // 绑定结清按钮
+    elArrearsBanner.querySelectorAll('.arrears-settle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(btn.dataset.idx);
+        settleArrears(idx);
+      });
+    });
+  }
+
+  function settleArrears(idx) {
+    var list = getArrearsList();
+    if (idx >= 0 && idx < list.length) {
+      _log('✅ 结清欠款: ' + JSON.stringify(list[idx]));
+      list.splice(idx, 1);
+      saveArrearsList(list);
+      renderArrearsBanner();
+      updateSummary();
+    }
   }
 
   // 计算新的累计欠款（保存时用）
@@ -301,10 +363,22 @@ window.addEventListener('unhandledrejection', function(e) {
     var total = rent + wc + ec + net + other;
     var paid = parseFloat(elActualPaid ? elActualPaid.value : 0) || 0;
     var monthArrears = Math.max(0, total - paid);
-    var latestData = load();
-    var latestInfo = latestData[rk()] || {};
-    var prevArrears = parseFloat(latestInfo.totalArrears) || 0;
-    return (prevArrears + monthArrears).toFixed(2);
+
+    var list = getArrearsList();
+    // 如果本月有欠款，加入历史
+    if (monthArrears > 0) {
+      var curMonth = new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0');
+      list.push({ month: curMonth, amount: monthArrears.toFixed(2) });
+      _log('📝 新增欠款: ' + curMonth + ' ¥' + monthArrears.toFixed(2));
+    }
+    // 保存更新后的列表
+    var d = load();
+    if (!d[rk()]) d[rk()] = {};
+    d[rk()].arrearsList = JSON.stringify(list);
+    save(d);
+
+    var totalA = list.reduce(function(s,a){ return s + (parseFloat(a.amount)||0); }, 0);
+    return totalA.toFixed(2);
   }
 
   // 监听变化 → 更新汇总
@@ -597,10 +671,12 @@ window.addEventListener('unhandledrejection', function(e) {
           depositDate: elDepDate ? elDepDate.value : '',
           depositNote: elDepNote ? elDepNote.value.trim() : '',
           actualPaid: elActualPaid ? elActualPaid.value.trim() : '',
-          totalArrears: calcTotalArrears(),
           lastPaidMonth: lastPaid,
         };
-        save(data);
+        // 计算欠款并写入 arrearsList（calcTotalArrears 内部会 save）
+        calcTotalArrears();
+        // 重新加载，确保 arrearsList 合并
+        data = load();
 
         // 云端同步
         if (typeof LandlordAuth !== 'undefined') {

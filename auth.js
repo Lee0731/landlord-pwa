@@ -236,6 +236,7 @@
       deposit_note: d.depositNote||'',
       remind_day: d.rentRemindDay||0, remind_enabled: d.rentRemindEnabled||false,
       actual_paid: d.actualPaid||'', total_arrears: d.totalArrears||'0',
+      arrears_list: d.arrearsList||'[]',
       last_paid_month: d.lastPaidMonth||'',
     };
   }
@@ -257,6 +258,7 @@
     d.rentRemindDay=row.remind_day||0; d.rentRemindEnabled=row.remind_enabled||false;
     d.actualPaid=row.actual_paid||'';
     d.totalArrears=row.total_arrears||'0';
+    d.arrearsList=row.arrears_list||'[]';
     d.lastPaidMonth=row.last_paid_month||'';
     d._cloudTime=new Date(row.updated_at).getTime();
     return d;
