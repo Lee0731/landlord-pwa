@@ -590,6 +590,22 @@ window.addEventListener('unhandledrejection', function(e) {
 
   _log('✅ 详情页初始化完成');
 
+  // ---- 重新从 IndexedDB 加载图片 ----
+  function reloadImages() {
+    DB.getImage(rk() + '-front').then(function(data) {
+      if (data && elIdFront && elIdFrontImg) {
+        showImage(elIdFront, elIdFrontImg, data);
+        _log('☁ 图片已刷新: 正面');
+      }
+    }).catch(function() {});
+    DB.getImage(rk() + '-back').then(function(data) {
+      if (data && elIdBack && elIdBackImg) {
+        showImage(elIdBack, elIdBackImg, data);
+        _log('☁ 图片已刷新: 反面');
+      }
+    }).catch(function() {});
+  }
+
   // ---- Supabase 登录 + 拉云端数据 ----
   if (typeof LandlordAuth !== 'undefined') {
     LandlordAuth.ensureLogin(function (session) {
@@ -622,6 +638,8 @@ window.addEventListener('unhandledrejection', function(e) {
           updateSummary();
           _log('☁ 云端数据已合并');
         }
+        // 云端图片已缓存到 IndexedDB，重新加载显示
+        reloadImages();
       }, 2000);
     });
   }
