@@ -16,6 +16,7 @@
   <nav class="top-bar">
     <div class="top-bar-inner">
       <span class="logo">房东管家</span>
+      <span class="sync-icon offline" id="syncIcon" title="离线">●</span>
       <span class="date" id="todayDate"></span>
     </div>
   </nav>
@@ -209,6 +210,20 @@
     <div class="debug-body" id="debugBody"></div>
   </div>
 
+  <!-- 登录遮罩 -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-title">房东管家</div>
+      <div class="login-sub">登录以同步数据</div>
+      <input type="email" id="loginEmail" placeholder="邮箱" autocomplete="email" />
+      <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password" />
+      <div class="login-err" id="loginErr"></div>
+      <button class="login-btn" id="loginBtn">登录</button>
+    </div>
+  </div>
+
+  <script src="supabase.min.js"></script>
+  <script src="auth.js"></script>
   <script src="db.js"></script>
   <script src="app.js"></script>
 </body>

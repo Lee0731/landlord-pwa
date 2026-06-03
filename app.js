@@ -1,5 +1,5 @@
 /* ============================================
-   房东管家 — 主页逻辑（带调试日志）
+   房东管家 — 主页逻辑（带云端同步）
    ============================================ */
 
 // ---- 调试日志工具 ----
@@ -110,47 +110,33 @@ function _log(msg, type) {
 
   // ---- 提醒检查 ----
   function checkReminders() {
-    if (!('Notification' in window)) {
-      _log('⚠ 浏览器不支持 Notification');
-      return;
-    }
-    if (Notification.permission !== 'granted') {
-      _log('ℹ 通知权限: ' + Notification.permission);
-      return;
-    }
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
 
     var today = new Date().getDate();
     var curMonth = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
     var data = load();
 
-    if (typeof LandlordDB === 'undefined') {
-      _log('⚠ LandlordDB 未加载，跳过提醒检查', 'warn');
-      return;
-    }
-
+    if (typeof LandlordDB === 'undefined') return;
     LandlordDB.getAllReminders().then(function (reminders) {
-      _log('🔔 检查提醒: ' + reminders.length + '条, 今天' + today + '日');
       reminders.forEach(function (rem) {
         if (!rem.enabled || rem.day !== today) return;
         var info = data[rem.building + '-' + rem.room] || {};
         if (info.lastPaidMonth === curMonth) return;
 
-        _log('📬 推送提醒: ' + rem.building + ' ' + rem.room);
         new Notification('收租提醒', {
           body: rem.building + ' ' + rem.room + ' — 今日应收租金',
           tag: rem.building + '-' + rem.room + '-' + curMonth,
         });
       });
-    }).catch(function(e) {
-      _log('❌ 提醒检查失败: ' + e.message, 'err');
-    });
+    }).catch(function() {});
   }
 
   // ---- Service Worker ----
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').then(function(reg) {
-        _log('✅ SW注册成功, scope=' + reg.scope);
+        _log('✅ SW注册成功');
       }).catch(function(e) {
         _log('❌ SW注册失败: ' + e.message, 'err');
       });
@@ -159,6 +145,29 @@ function _log(msg, type) {
 
   // ---- 启动 ----
   refresh();
+
+  // ---- Supabase 登录 + 云同步 ----
+  if (typeof LandlordAuth !== 'undefined') {
+    _log('☁ 检查登录状态…');
+    LandlordAuth.ensureLogin(function (session) {
+      if (!session) {
+        _log('⚠ 未登录，仅本地模式', 'warn');
+        return;
+      }
+      _log('✅ 已登录: ' + session.user.email);
+
+      // 首次迁移本地数据
+      LandlordAuth.migrateToCloud();
+
+      // 拉取云端数据并刷新
+      LandlordAuth.pullFromCloud();
+      // 2 秒后刷新 UI（等云端数据回来）
+      setTimeout(refresh, 2000);
+    });
+  } else {
+    _log('⚠ LandlordAuth 未加载', 'warn');
+  }
+
   checkReminders();
   _log('✅ 主页初始化完成');
 })();

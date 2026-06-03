@@ -2,7 +2,7 @@
    房东管家 — Service Worker
    ============================================ */
 
-const CACHE_NAME = 'landlord-v2';
+const CACHE_NAME = 'landlord-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -12,6 +12,8 @@ const ASSETS = [
   '/detail.css',
   '/detail.js',
   '/db.js',
+  '/auth.js',
+  '/supabase.min.js',
   '/manifest.json',
 ];
 
@@ -35,8 +37,11 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 拦截请求 — 缓存优先
+// 拦截请求 — 缓存优先，网络回退
 self.addEventListener('fetch', (event) => {
+  // 只缓存同源请求，Supabase API 请求走网络
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request);
@@ -59,36 +64,24 @@ async function checkReminders() {
     db.close();
 
     const today = new Date().getDate();
-    const curMonth = new Date().getFullYear() + '-' +
-      String(new Date().getMonth() + 1).padStart(2, '0');
 
-    // 读 localStorage 数据需要通过 clients
-    const clients = await self.clients.matchAll({ type: 'window' });
-    // SW 无法直接读 localStorage，所以用简易方案：
-    // 只对比提醒日，不判断已付（已付由主页判断）
     all.forEach((rem) => {
       if (rem.enabled && rem.day === today) {
         self.registration.showNotification('收租提醒', {
           body: rem.building + ' ' + rem.room + ' — 今日应收租金',
-          tag: rem.building + '-' + rem.room + '-' + curMonth,
         });
       }
     });
-  } catch (e) { /* ignore */ }
+  } catch (e) {}
 }
 
-// ---- IndexedDB 辅助 ----
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('landlord_db', 1);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
-      if (!db.objectStoreNames.contains('id_cards')) {
-        db.createObjectStore('id_cards', { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains('reminders')) {
-        db.createObjectStore('reminders', { keyPath: 'id' });
-      }
+      if (!db.objectStoreNames.contains('id_cards')) db.createObjectStore('id_cards', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('reminders')) db.createObjectStore('reminders', { keyPath: 'id' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -102,16 +95,12 @@ function wrapRequest(req) {
   });
 }
 
-// ---- 点击通知打开应用 ----
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      if (clients.length > 0) {
-        clients[0].focus();
-      } else {
-        self.clients.openWindow('/');
-      }
+      if (clients.length > 0) clients[0].focus();
+      else self.clients.openWindow('/');
     })
   );
 });

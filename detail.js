@@ -504,6 +504,11 @@ window.addEventListener('unhandledrejection', function(e) {
         };
         save(data);
 
+        // 云端同步
+        if (typeof LandlordAuth !== 'undefined') {
+          LandlordAuth.pushRoom(building, room, data[rk()]);
+        }
+
         // 提醒存 IndexedDB
         if (day > 0) {
           DB.saveReminder(rk(), {
@@ -559,6 +564,11 @@ window.addEventListener('unhandledrejection', function(e) {
         delete data[rk()];
         save(data);
 
+        // 云端删除
+        if (typeof LandlordAuth !== 'undefined') {
+          LandlordAuth.deleteRoom(building, room);
+        }
+
         DB.deleteRoomImages(building, room).then(function() {
           _log('✅ 图片已删除');
         }).catch(function(e) {
@@ -575,4 +585,40 @@ window.addEventListener('unhandledrejection', function(e) {
   }
 
   _log('✅ 详情页初始化完成');
+
+  // ---- Supabase 登录 + 拉云端数据 ----
+  if (typeof LandlordAuth !== 'undefined') {
+    LandlordAuth.ensureLogin(function (session) {
+      if (!session) return;
+      // 拉取该房间最新云端数据
+      LandlordAuth.pullFromCloud();
+      setTimeout(function() {
+        // 重新加载表单（如果云端有更新）
+        var freshData = load();
+        var freshInfo = freshData[rk()];
+        if (freshInfo) {
+          if (elName) elName.value = freshInfo.tenantName || '';
+          if (elPhone) elPhone.value = freshInfo.tenantPhone || '';
+          if (elRent) elRent.value = freshInfo.rentAmount || '';
+          if (elStart) elStart.value = freshInfo.rentStart || '';
+          if (elNote) elNote.value = freshInfo.rentNote || '';
+          if (elWaterPrice) elWaterPrice.value = freshInfo.waterPrice || '';
+          if (elWaterPrev) elWaterPrev.value = freshInfo.waterPrevReading || '';
+          if (elWaterCurr) elWaterCurr.value = freshInfo.waterCurrReading || '';
+          if (elElecPrice) elElecPrice.value = freshInfo.elecPrice || '';
+          if (elElecPrev) elElecPrev.value = freshInfo.elecPrevReading || '';
+          if (elElecCurr) elElecCurr.value = freshInfo.elecCurrReading || '';
+          if (elDepAmt) elDepAmt.value = freshInfo.depositAmount || '';
+          if (elDepDate) elDepDate.value = freshInfo.depositDate || '';
+          if (elDepNote) elDepNote.value = freshInfo.depositNote || '';
+          if (elRemindDay) elRemindDay.value = freshInfo.rentRemindDay || 0;
+          lastPaid = freshInfo.lastPaidMonth || '';
+          updateStatus();
+          updatePaidBtn();
+          updateSummary();
+          _log('☁ 云端数据已合并');
+        }
+      }, 2000);
+    });
+  }
 })();
